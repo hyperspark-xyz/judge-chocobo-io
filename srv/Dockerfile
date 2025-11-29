@@ -13,7 +13,8 @@ COPY --from=build /app/dist /app
 COPY --from=build /app/package.json /app
 COPY --from=build /app/package-lock.json /app
 
-RUN npm ci --production
+RUN npm ci --include prod
+
 RUN rm package.json package-lock.json
 
 EXPOSE 3000
