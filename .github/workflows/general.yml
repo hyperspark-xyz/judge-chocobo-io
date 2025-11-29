@@ -6,9 +6,6 @@ jobs:
     name: Publish Server
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    needs: 
-    - check-server
-    - check-client
     steps:
     - name: Checkout Source
       uses: actions/checkout@v2
@@ -37,9 +34,6 @@ jobs:
     name: Publish Client
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    needs: 
-    - check-server
-    - check-client
     steps:
     - name: Checkout Source
       uses: actions/checkout@v2
