@@ -11,7 +11,7 @@ services:
     networks:
       - caddy
     labels:
-      caddy: http://api.judge.chocobo.io
+      caddy: http://api-judge.chocobo.io
       caddy.reverse_proxy: "{{upstreams $SERVER_PORT}}"
     depends_on:
       - "database"
