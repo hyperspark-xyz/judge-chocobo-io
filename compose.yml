@@ -16,7 +16,7 @@ services:
     depends_on:
       - "database"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5174/api/blogs" ]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/" ]
       interval: 5s
       retries: 3
       timeout: 2s
