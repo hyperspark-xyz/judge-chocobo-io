@@ -8,6 +8,8 @@ RUN npm run build
 
 FROM node:22-alpine AS production
 
+WORKDIR /app
+
 # Copy assets from build
 COPY --from=build /app/dist /app
 COPY --from=build /app/package.json /app
