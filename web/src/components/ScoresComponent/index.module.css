@@ -1,0 +1,28 @@
+.entrantScoresList {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.entrantScoresListItem {
+    margin-bottom: 10px;
+    border-radius: 10px;
+    padding: 10px;
+    position: relative;
+}
+
+.entrantScoresListItem > sup {
+    position: absolute;
+    right: -5px;
+    top: -7px;
+}
+
+.entrantLabel {
+    display: grid;
+    grid-template-columns: auto 60px;
+}
+
+.scoreInput {
+    width: 40px;
+    margin-left: 10px;
+}

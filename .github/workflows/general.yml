@@ -1,0 +1,99 @@
+on:
+  push:
+
+jobs:
+  publish-server:
+    name: Publish Server
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: 
+    - check-server
+    - check-client
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v2
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and push
+      uses: docker/build-push-action@v6
+      with:
+        context: "./srv"
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: aaronjamesmarshallau/api-judge-chocobo-io:${{ github.sha }}
+
+  publish-client:
+    name: Publish Client
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: 
+    - check-server
+    - check-client
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v2
+      
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and push
+      uses: docker/build-push-action@v6
+      with:
+        context: "./web"
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: aaronjamesmarshallau/judge-chocobo-io:${{ github.sha }}
+        build-args: |
+          VITE_API_BASE_URL=https://api.judge.chocobo.io
+          VITE_WS_BASE_URL=ws://api.judge.chocobo.io
+
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: 
+    - publish-server
+    - publish-client
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v2
+
+    - name: Prepare Deployment Files
+      run: |
+        mkdir -p deploy
+        echo "SERVER_IMAGE=aaronjamesmarshallau/api-judge-chocobo-io:${{ github.sha }}" >> deploy/.env
+        echo "CLIENT_IMAGE=aaronjamesmarshallau/judge-chocobo-io:${{ github.sha }}" >> deploy/.env
+        echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> deploy/.env
+        echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> deploy/.env
+        echo "CLIENT_PORT=${{ secrets.CLIENT_PORT }}" >> deploy/.env
+        echo "SERVER_PORT=${{ secrets.SERVER_PORT }}" >> deploy/.env
+        cp compose.yml deploy/docker-compose.yml
+
+    - name: Deploy
+      uses: easingthemes/ssh-deploy@main
+      with:
+        SSH_PRIVATE_KEY: ${{ secrets.I18U_SERVICE_PRIVATE_KEY }}
+        REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+        REMOTE_USER: ${{ secrets.REMOTE_USER }}
+        SOURCE: "deploy/"
+        SCRIPT_AFTER: "doas docker compose up -d"
